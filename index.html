@@ -30,13 +30,16 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
       grid-template-columns:2.5rem 1fr 1fr 1fr;
       align-items:center;column-gap:1rem}
 
-/* header */
+/* header row (first cell blank) */
 .header{font-size:1.1rem;font-weight:600;opacity:.75;text-shadow:0 0 4px rgba(0,0,0,.6)}
 .header span{text-align:center}
 
 /* data rows */
 .row{font-size:1.8rem;font-weight:700;letter-spacing:.5px}
 .row span{text-shadow:0 0 5px rgba(0,0,0,.7)}
+
+/* ---- NEW: add space between consecutive data rows ---- */
+.row + .row{margin-top:.6rem}
 
 /* column alignment */
 .icon,.name,.hash,.best{text-align:center}
@@ -57,8 +60,9 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
     <div id="title">Swarm&nbsp;ALPHA’s&nbsp;TOP&nbsp;Ranking</div>
 
     <div id="board">
+        <!-- header: STATUS label removed -->
         <div class="header grid">
-            <span class="icon">STATUS</span>
+            <span class="icon"></span>                 <!-- empty cell -->
             <span class="name">MEMBER</span>
             <span class="hash">HASHRATE</span>
             <span class="best">TOP&nbsp;NONCE&nbsp;VALUE</span>
@@ -72,15 +76,13 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 const ADDRESS  = 'bc1qjstetm3fsjnc0d9xuwqv3wlucm9slcm9l9gqxa';
 const CK_URL   = `https://solo.ckpool.org/users/${ADDRESS}`;
 const PROXY    = 'https://corsproxy.io/?';
-const FETCH_URL = PROXY + encodeURIComponent(CK_URL);
+const FETCH_URL= PROXY + encodeURIComponent(CK_URL);
 
 /* ===== UTILS ===== */
 function toNumber(str='0'){
   let n=parseFloat(str);
-  if(str.includes('P'))n*=1e15;
-  else if(str.includes('T'))n*=1e12;
-  else if(str.includes('G'))n*=1e9;
-  else if(str.includes('M'))n*=1e6;
+  if(str.includes('P'))n*=1e15; else if(str.includes('T'))n*=1e12;
+  else if(str.includes('G'))n*=1e9; else if(str.includes('M'))n*=1e6;
   else if(str.includes('K'))n*=1e3;
   return n;
 }
@@ -94,7 +96,7 @@ function tickClock(){
       hour:'2-digit',minute:'2-digit',second:'2-digit'
     });
 }
-tickClock();setInterval(tickClock,1000);
+tickClock(); setInterval(tickClock,1000);
 
 /* ===== FETCH + RENDER WORKERS ===== */
 async function refreshStats(){
@@ -106,20 +108,15 @@ async function refreshStats(){
 
     workers.sort((a,b)=>b.bestever-a.bestever);
 
-    const container=document.getElementById('workers');
-    container.innerHTML='';
+    const wrap=document.getElementById('workers');
+    wrap.innerHTML='';
 
     workers.forEach(w=>{
-      const id       = w.workername.split('.')[1] ?? w.workername;
-      const hashrate = w.hashrate1m;
-      const best     = w.bestever.toLocaleString();
-
-      /* ---------- NEW STATUS LOGIC ---------- */
-      const hNum = toNumber(hashrate);                 // numeric value
-      const icon =
-            hNum === 0          ? '🔴' :               // stopped
-            hNum < 0.5e12       ? '🟡' :               // < 0.5 T
-                                  '🟢';                // ≥ 0.5 T
+      const id=w.workername.split('.')[1]??w.workername;
+      const hashrate=w.hashrate1m;
+      const best=w.bestever.toLocaleString();
+      const hNum=toNumber(hashrate);
+      const icon=hNum===0?'🔴': hNum<0.5e12?'🟡':'🟢';  // red / yellow / green
 
       const row=document.createElement('div');
       row.className='row grid';
@@ -128,14 +125,14 @@ async function refreshStats(){
         <span class="name">${id}</span>
         <span class="hash">${hashrate}</span>
         <span class="best">${best}</span>`;
-      container.appendChild(row);
+      wrap.appendChild(row);
     });
   }catch(e){
     console.error(e);
     document.getElementById('workers').textContent='Failed to load CKPool data.';
   }
 }
-refreshStats();setInterval(refreshStats,5000);
+refreshStats(); setInterval(refreshStats,5000);
 
 /* ===== MATRIX RAIN ===== */
 const canvas=document.getElementById('matrix');
@@ -149,7 +146,7 @@ function resize(){
   cols=Math.floor(w/font);
   drops=Array(cols).fill(1);
 }
-resize();window.addEventListener('resize',resize);
+resize(); window.addEventListener('resize',resize);
 
 function draw(){
   ctx.fillStyle='rgba(0,0,0,0.05)';
@@ -157,8 +154,8 @@ function draw(){
   ctx.fillStyle='#0f0';
   ctx.font=font+'px monospace';
   drops.forEach((y,i)=>{
-    const text=chars[Math.random()*chars.length|0];
-    ctx.fillText(text,i*font,y*font);
+    const ch=chars[Math.random()*chars.length|0];
+    ctx.fillText(ch,i*font,y*font);
     drops[i]=y*font>h&&Math.random()>0.975?0:y+1;
   });
 }
