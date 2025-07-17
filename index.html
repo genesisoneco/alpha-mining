@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>CKPool Swarm ALPHA Board</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- removed the meta http-equiv="refresh" tag so the page no longer reloads -->
 <style>
 /* ===== minimalist dark theme ===== */
 html,body{margin:0;height:100%;background:#000;color:#fff;
@@ -21,20 +20,25 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 
 /* clock + title */
 #datetime{font-size:1.5rem;font-weight:600;text-align:center}
-#title  {font-size:2.5rem;font-weight:800;letter-spacing:2px;text-align:center;margin-top:-1rem}
+#title  {font-size:2.3rem;font-weight:800;letter-spacing:1.5px;
+         text-align:center;margin-top:-1rem}
 
-/* worker list */
-#workers{display:flex;flex-direction:column;gap:1.2rem;width:90%;max-width:900px}
+/* container holding header + data rows */
+#board{display:flex;flex-direction:column;gap:1.2rem;width:90%;max-width:900px}
 
-/* each row as 4-column grid */
-.row{
-  display:grid;
-  grid-template-columns:2.5rem 1fr 1fr 1fr;  /* icon | id | hashrate | bestever */
-  align-items:center;
-  column-gap:1rem;
-  font-size:1.8rem;font-weight:700;letter-spacing:.5px;
-}
-.row span{text-shadow:0 0 5px rgba(0,0,0,.7)}  /* subtle glow */
+/* shared grid layout: 4 equal columns after icon */
+.grid{display:grid;
+      grid-template-columns:2.5rem 1fr 1fr 1fr; /* icon | id | hashrate | best */
+      align-items:center;column-gap:1rem}
+
+/* header styling */
+.header{font-size:1.1rem;font-weight:600;opacity:.75;
+        text-shadow:0 0 4px rgba(0,0,0,.6)}
+.header span{text-align:center}
+
+/* data rows */
+.row{font-size:1.8rem;font-weight:700;letter-spacing:.5px}
+.row span{text-shadow:0 0 5px rgba(0,0,0,.7)}
 
 /* column alignment */
 .icon{text-align:center}
@@ -45,7 +49,7 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 /* responsive */
 @media(max-width:600px){
   .row{font-size:1.3rem}
-  #title{font-size:1.8rem}
+  #title{font-size:1.7rem}
 }
 </style>
 </head>
@@ -55,8 +59,21 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 
 <div class="wrapper">
     <div id="datetime">Loading time…</div>
-    <div id="title">Swarm&nbsp;ALPHA</div>
-    <div id="workers">Fetching CKPool data…</div>
+    <div id="title">Swarm&nbsp;ALPHA’s&nbsp;TOP&nbsp;Ranking</div>
+
+    <!-- board = header row + live worker rows -->
+    <div id="board">
+        <!-- static header -->
+        <div class="header grid">
+            <span class="icon">STATUS</span>
+            <span class="name">MEMBER</span>
+            <span class="hash">HASHRATE</span>
+            <span class="best">TOP&nbsp;NONCE&nbsp;VALUE</span>
+        </div>
+
+        <!-- live data placeholder -->
+        <div id="workers"></div>
+    </div>
 </div>
 
 <script>
@@ -68,13 +85,11 @@ const FETCH_URL = PROXY + encodeURIComponent(CK_URL);
 
 /* ===== UTILS ===== */
 function toNumber(str='0'){
-  let num=parseFloat(str);
-  if(str.includes('P'))num*=1e15;
-  else if(str.includes('T'))num*=1e12;
-  else if(str.includes('G'))num*=1e9;
-  else if(str.includes('M'))num*=1e6;
-  else if(str.includes('K'))num*=1e3;
-  return num;
+  let n=parseFloat(str);
+  if(str.includes('P'))n*=1e15;else if(str.includes('T'))n*=1e12;
+  else if(str.includes('G'))n*=1e9;else if(str.includes('M'))n*=1e6;
+  else if(str.includes('K'))n*=1e3;
+  return n;
 }
 
 /* ===== CLOCK ===== */
@@ -100,21 +115,20 @@ async function refreshStats(){
     workers.sort((a,b)=>b.bestever-a.bestever);
 
     const container=document.getElementById('workers');
-    container.innerHTML='';
+    container.innerHTML='';               // clear old
     workers.forEach(w=>{
       const id=w.workername.split('.')[1]??w.workername;
       const hashrate=w.hashrate1m;
-      const bestever=w.bestever.toLocaleString();
+      const best=w.bestever.toLocaleString();
       const active=toNumber(hashrate)>0;
       const icon=active?'🟢':'🔴';
 
       const row=document.createElement('div');
-      row.className='row';
-      row.innerHTML=`
-        <span class="icon">${icon}</span>
-        <span class="name">${id}</span>
-        <span class="hash">${hashrate}</span>
-        <span class="best">${bestever}</span>`;
+      row.className='row grid';
+      row.innerHTML=`<span class="icon">${icon}</span>
+                     <span class="name">${id}</span>
+                     <span class="hash">${hashrate}</span>
+                     <span class="best">${best}</span>`;
       container.appendChild(row);
     });
   }catch(e){
@@ -122,13 +136,13 @@ async function refreshStats(){
     document.getElementById('workers').textContent='Failed to load CKPool data.';
   }
 }
-refreshStats();setInterval(refreshStats,5000);   // change or remove this if you want manual updates
+refreshStats();setInterval(refreshStats,5000);   // adjust/lift if you prefer manual updates
 
 /* ===== MATRIX RAIN CANVAS ===== */
 const canvas=document.getElementById('matrix');
 const ctx=canvas.getContext('2d');
 let w,h,font=14,cols,drops,
-letters='アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズヅブプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポ0123456789ABCDEF';
+chars='アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズヅブプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポ0123456789ABCDEF';
 
 function resize(){
   w=canvas.width=window.innerWidth;
@@ -142,7 +156,7 @@ function draw(){
   ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,w,h);
   ctx.fillStyle='#0f0';ctx.font=font+'px monospace';
   drops.forEach((y,i)=>{
-    const text=letters.charAt(Math.random()*letters.length|0);
+    const text=chars.charAt(Math.random()*chars.length|0);
     ctx.fillText(text,i*font,y*font);
     drops[i]=y*font>h&&Math.random()>0.975?0:y+1;
   });
