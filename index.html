@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CKPool Worker Board</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- hard-refresh every 5 s -->
+<meta http-equiv="refresh" content="5" />
+
+<style>
+/* ---------- minimalist dark theme ---------- */
+html,body{margin:0;height:100%;background:#000;color:#fff;
+          font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
+
+/* layout */
+.wrapper{display:flex;flex-direction:column;justify-content:center;
+         align-items:center;gap:2rem;height:100%}
+
+/* date-time */
+#datetime{font-size:1.5rem;font-weight:600;text-align:center}
+
+/* worker list */
+#workers{display:flex;flex-direction:column;gap:1.2rem;width:90%;max-width:900px}
+
+/* each row */
+.row{display:flex;align-items:center;justify-content:space-between;
+     font-size:1.8rem;font-weight:700;letter-spacing:.5px}
+
+/* columns */
+.icon{width:2.5rem;text-align:center}
+.name{text-align:left;flex:1}
+.hash,.best{width:9rem;text-align:right}
+
+/* responsive tweak */
+@media(max-width:600px){.row{font-size:1.3rem}.hash,.best{width:7rem}}
+</style>
+</head>
+
+<body>
+  <div class="wrapper">
+      <div id="datetime">Loading time…</div>
+      <div id="workers">Fetching CKPool data…</div>
+  </div>
+
+<script>
+/* ---------- CONFIG ---------- */
+const ADDRESS  = 'bc1qjstetm3fsjnc0d9xuwqv3wlucm9slcm9l9gqxa';        // your BTC payout address
+const CK_URL   = `https://solo.ckpool.org/users/${ADDRESS}`;          // returns raw JSON :contentReference[oaicite:0]{index=0}
+const PROXY    = 'https://corsproxy.io/?';                            // bypass CORS
+const FETCH_URL = PROXY + encodeURIComponent(CK_URL);
+
+/* ---------- UTILITIES ---------- */
+// convert “1.26T”, “780G”, “0” → numeric for comparisons
+function toNumber(str='0'){
+  let num = parseFloat(str);
+  if (str.includes('P')) num *= 1e15;
+  else if (str.includes('T')) num *= 1e12;
+  else if (str.includes('G')) num *= 1e9;
+  else if (str.includes('M')) num *= 1e6;
+  else if (str.includes('K')) num *= 1e3;
+  return num;
+}
+
+/* ---------- RENDER CLOCK ---------- */
+function tickClock(){
+  const now = new Date();
+  document.getElementById('datetime').textContent =
+    now.toLocaleString(undefined, {      // locale-aware full datetime
+      weekday:'short', year:'numeric', month:'long', day:'numeric',
+      hour:'2-digit', minute:'2-digit', second:'2-digit'
+    });
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+/* ---------- FETCH + RENDER WORKERS ---------- */
+async function refreshStats(){
+  try{
+    const res  = await fetch(FETCH_URL);
+    if(!res.ok) throw new Error(res.statusText);
+    const data = await res.json ? await res.json() : JSON.parse(await res.text());
+    const workers = data.worker ?? [];
+
+    /* sort by bestever (highest first)  */
+    workers.sort((a,b)=>b.bestever - a.bestever);
+
+    /* build DOM */
+    const container = document.getElementById('workers');
+    container.innerHTML = '';                     // clear old rows
+    workers.forEach(w => {
+      const id        = w.workername.split('.')[1] ?? w.workername;
+      const hashrate  = w.hashrate1m;
+      const bestever  = w.bestever.toLocaleString();
+      const activeNum = toNumber(hashrate);
+      const icon      = activeNum > 0 ? '🟢' : '🔴';
+
+      const row = document.createElement('div');
+      row.className = 'row';
+      row.innerHTML = `
+        <span class="icon">${icon}</span>
+        <span class="name">${id}</span>
+        <span class="hash">${hashrate}</span>
+        <span class="best">${bestever}</span>`;
+      container.appendChild(row);
+    });
+  }catch(err){
+    console.error(err);
+    document.getElementById('workers').textContent = 'Failed to load CKPool data.';
+  }
+}
+
+/* first run + every 5 s (same cadence as meta refresh) */
+refreshStats();
+setInterval(refreshStats, 5000);
+</script>
+</body>
+</html>
