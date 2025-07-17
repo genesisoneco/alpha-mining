@@ -38,10 +38,10 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 .row{font-size:1.8rem;font-weight:700;letter-spacing:.5px}
 .row span{text-shadow:0 0 5px rgba(0,0,0,.7)}
 
-/* ---- NEW: add space between consecutive data rows ---- */
+/* spacing between rows */
 .row + .row{margin-top:.6rem}
 
-/* column alignment */
+/* align columns */
 .icon,.name,.hash,.best{text-align:center}
 
 /* responsive */
@@ -60,9 +60,8 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
     <div id="title">Swarm&nbsp;ALPHA’s&nbsp;TOP&nbsp;Ranking</div>
 
     <div id="board">
-        <!-- header: STATUS label removed -->
         <div class="header grid">
-            <span class="icon"></span>                 <!-- empty cell -->
+            <span class="icon"></span>
             <span class="name">MEMBER</span>
             <span class="hash">HASHRATE</span>
             <span class="best">TOP&nbsp;NONCE&nbsp;VALUE</span>
@@ -116,7 +115,7 @@ async function refreshStats(){
       const hashrate=w.hashrate1m;
       const best=w.bestever.toLocaleString();
       const hNum=toNumber(hashrate);
-      const icon=hNum===0?'🔴': hNum<0.5e12?'🟡':'🟢';  // red / yellow / green
+      const icon=hNum===0?'🔴': hNum<0.5e12?'🟡':'🟢';
 
       const row=document.createElement('div');
       row.className='row grid';
@@ -134,7 +133,7 @@ async function refreshStats(){
 }
 refreshStats(); setInterval(refreshStats,5000);
 
-/* ===== MATRIX RAIN ===== */
+/* ===== MATRIX RAIN (green on weekdays, orange on weekends) ===== */
 const canvas=document.getElementById('matrix');
 const ctx=canvas.getContext('2d');
 let w,h,font=14,cols,drops,
@@ -151,7 +150,12 @@ resize(); window.addEventListener('resize',resize);
 function draw(){
   ctx.fillStyle='rgba(0,0,0,0.05)';
   ctx.fillRect(0,0,w,h);
-  ctx.fillStyle='#0f0';
+
+  /* -------- choose color by weekday -------- */
+  const day   = new Date().getDay();           // 0 = Sun, 6 = Sat
+  const color = (day===0 || day===6) ? '#ff9f00' : '#0f0';  // orange on weekends
+  ctx.fillStyle=color;
+
   ctx.font=font+'px monospace';
   drops.forEach((y,i)=>{
     const ch=chars[Math.random()*chars.length|0];
