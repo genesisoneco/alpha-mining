@@ -13,11 +13,10 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 /* ===== matrix canvas ===== */
 #matrix{position:fixed;inset:0;z-index:0;background:#000;pointer-events:none}
 
-/* ===== WEATHER block ===== */
-#weather{position:relative;z-index:1;margin-top:1rem;
-         display:flex;flex-direction:column;align-items:center;gap:.25rem}
-#weather .icon{font-size:4rem;line-height:1}
-#weather .temp{font-size:3rem;font-weight:800;text-shadow:0 0 6px #000}
+/* ===== WEATHER block (inside wrapper) ===== */
+#weather{display:flex;flex-direction:column;align-items:center;gap:.25rem}
+#weather .icon{font-size:6rem;line-height:1}
+#weather .temp{font-size:4.5rem;font-weight:900;text-shadow:0 0 6px #000}
 
 /* ===== PAGE layout ===== */
 .wrapper{position:relative;z-index:1;
@@ -35,10 +34,9 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 .row{font-size:1.8rem;font-weight:700;letter-spacing:.5px}
 .row span{text-shadow:0 0 5px #000}
 .row + .row{margin-top:.6rem}
-
 .icon,.name,.hash,.best{text-align:center}
 
-/* nav links */
+/* navigation links */
 #navlinks{position:fixed;bottom:34px;left:0;right:0;text-align:center;
           font-size:1rem;font-weight:700;z-index:1}
 #navlinks a{color:#fff;text-decoration:none;margin:0 1.5rem}
@@ -59,13 +57,13 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 <body>
 <canvas id="matrix"></canvas>
 
-<!-- WEATHER -->
-<div id="weather">
-  <div class="icon">⏳</div>
-  <div class="temp">--°C</div>
-</div>
-
 <div class="wrapper">
+    <!-- WEATHER (big icon + temp) -->
+    <div id="weather">
+      <div class="icon">⏳</div>
+      <div class="temp">--°C</div>
+    </div>
+
     <div id="datetime">Loading time…</div>
     <div id="title">Swarm&nbsp;ALPHA’s&nbsp;TOP&nbsp;Ranking</div>
 
@@ -80,39 +78,38 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
     </div>
 </div>
 
+<!-- navigation links -->
 <div id="navlinks">
   <a href="https://genesisoneco.github.io/alpha-mining">Swarm&nbsp;ALPHA</a>
   <a href="https://genesisoneco.github.io/beta-mining">Swarm&nbsp;BETA</a>
 </div>
 
+<!-- copyright footer -->
 <div id="footer">Genesis&nbsp;One&nbsp;Mining&nbsp;©&nbsp;2025</div>
 
 <script>
 /* ===== WEATHER (Seoul) ===== */
-const WX_URL = 'https://api.open-meteo.com/v1/forecast?latitude=37.566&longitude=126.978&current_weather=true&timezone=Asia%2FSeoul';
-const iconEl = document.querySelector('#weather .icon');
-const tempEl = document.querySelector('#weather .temp');
-
+const WX_URL='https://api.open-meteo.com/v1/forecast?latitude=37.566&longitude=126.978&current_weather=true&timezone=Asia%2FSeoul';
+const iconEl=document.querySelector('#weather .icon');
+const tempEl=document.querySelector('#weather .temp');
 function wxIcon(code){
-  /* mapping per Open-Meteo weather codes */
-  if(code===0) return '☀️';                       // clear
-  if([1,2].includes(code)) return '🌤️';            // partly cloudy
-  if(code===3) return '☁️';                        // overcast
-  if([45,48].includes(code)) return '🌫️';          // fog
-  if([51,53,55,56,57].includes(code)) return '🌦️'; // drizzle
-  if([61,63,65,80,81,82].includes(code)) return '🌧️'; // rain
-  if([66,67].includes(code)) return '🌧️';
-  if([71,73,75,77,85,86].includes(code)) return '❄️'; // snow
-  if([95,96,99].includes(code)) return '⛈️';        // thunder
+  if(code===0) return '☀️';
+  if([1,2].includes(code)) return '🌤️';
+  if(code===3) return '☁️';
+  if([45,48].includes(code)) return '🌫️';
+  if([51,53,55,56,57].includes(code)) return '🌦️';
+  if([61,63,65,80,81,82,66,67].includes(code)) return '🌧️';
+  if([71,73,75,77,85,86].includes(code)) return '❄️';
+  if([95,96,99].includes(code)) return '⛈️';
   return '❔';
 }
 async function fetchWeather(){
   try{
     const res=await fetch(WX_URL);
     const data=await res.json();
-    const {temperature, weathercode}=data.current_weather;
-    iconEl.textContent = wxIcon(weathercode);
-    tempEl.textContent = `${Math.round(temperature)}°C`;
+    const {temperature,weathercode}=data.current_weather;
+    iconEl.textContent=wxIcon(weathercode);
+    tempEl.textContent=`${Math.round(temperature)}°C`;
   }catch(e){
     console.error('weather error',e);
     iconEl.textContent='⚠️';
@@ -120,7 +117,7 @@ async function fetchWeather(){
   }
 }
 fetchWeather();
-setInterval(fetchWeather, 15*60*1000); // update every 15 min
+setInterval(fetchWeather,15*60*1000);
 
 /* ===== CLOCK ===== */
 function tickClock(){
@@ -134,10 +131,10 @@ function tickClock(){
 tickClock();setInterval(tickClock,1000);
 
 /* ===== CONFIG ===== */
-const ADDRESS  = 'bc1qjstetm3fsjnc0d9xuwqv3wlucm9slcm9l9gqxa';
-const CK_URL   = `https://solo.ckpool.org/users/${ADDRESS}`;
-const PROXY    = 'https://corsproxy.io/?';
-const FETCH_URL= PROXY + encodeURIComponent(CK_URL);
+const ADDRESS='bc1qjstetm3fsjnc0d9xuwqv3wlucm9slcm9l9gqxa';
+const CK_URL=`https://solo.ckpool.org/users/${ADDRESS}`;
+const PROXY='https://corsproxy.io/?';
+const FETCH_URL=PROXY+encodeURIComponent(CK_URL);
 
 /* ===== UTILS ===== */
 function toNumber(str='0'){
@@ -155,27 +152,21 @@ async function refreshStats(){
     if(!res.ok)throw new Error(res.statusText);
     const data=await res.json?await res.json():JSON.parse(await res.text());
     const workers=data.worker??[];
-
     workers.sort((a,b)=>b.bestever-a.bestever);
-
-    const wrap=document.getElementById('workers');
-    wrap.innerHTML='';
-
+    const wrap=document.getElementById('workers');wrap.innerHTML='';
     workers.forEach(w=>{
       const id=w.workername.split('.')[1]??w.workername;
       const hashrate=w.hashrate1m;
       const best=w.bestever.toLocaleString();
       const hNum=toNumber(hashrate);
       const icon=hNum===0?'🔴':hNum<0.5e12?'🟡':'🟢';
-
-      const row=document.createElement('div');
-      row.className='row grid';
-      row.innerHTML=`
-        <span class="icon">${icon}</span>
-        <span class="name">${id}</span>
-        <span class="hash">${hashrate}</span>
-        <span class="best">${best}</span>`;
-      wrap.appendChild(row);
+      wrap.insertAdjacentHTML('beforeend',`
+        <div class="row grid">
+          <span class="icon">${icon}</span>
+          <span class="name">${id}</span>
+          <span class="hash">${hashrate}</span>
+          <span class="best">${best}</span>
+        </div>`);
     });
   }catch(e){
     console.error(e);
@@ -184,27 +175,20 @@ async function refreshStats(){
 }
 refreshStats();setInterval(refreshStats,5000);
 
-/* ===== MATRIX RAIN (green weekdays, orange weekends) ===== */
+/* ===== MATRIX RAIN ===== */
 const canvas=document.getElementById('matrix');
 const ctx=canvas.getContext('2d');
-let w,h,font=14,cols,drops,
-chars='アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズヅブプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポ0123456789ABCDEF';
+let w,h,font=14,cols,drops,chars='アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズヅブプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポ0123456789ABCDEF';
 function resize(){
-  w=canvas.width=window.innerWidth;
-  h=canvas.height=window.innerHeight;
-  cols=Math.floor(w/font);
-  drops=Array(cols).fill(1);
-}
+  w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight;
+  cols=Math.floor(w/font);drops=Array(cols).fill(1);}
 resize();window.addEventListener('resize',resize);
 function draw(){
-  ctx.fillStyle='rgba(0,0,0,0.05)';
-  ctx.fillRect(0,0,w,h);
-  const day=new Date().getDay();
-  ctx.fillStyle=(day===0||day===6)?'#ff9f00':'#0f0';
+  ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,w,h);
+  const day=new Date().getDay();ctx.fillStyle=(day===0||day===6)?'#ff9f00':'#0f0';
   ctx.font=font+'px monospace';
   drops.forEach((y,i)=>{
-    const ch=chars[Math.random()*chars.length|0];
-    ctx.fillText(ch,i*font,y*font);
+    ctx.fillText(chars[Math.random()*chars.length|0],i*font,y*font);
     drops[i]=y*font>h&&Math.random()>0.975?0:y+1;
   });
 }
