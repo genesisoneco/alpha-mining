@@ -37,12 +37,27 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 /* data rows */
 .row{font-size:1.8rem;font-weight:700;letter-spacing:.5px}
 .row span{text-shadow:0 0 5px rgba(0,0,0,.7)}
+.row + .row{margin-top:.6rem}      /* spacing between data rows */
 
-/* spacing between rows */
-.row + .row{margin-top:.6rem}
-
-/* align columns */
+/* column alignment */
 .icon,.name,.hash,.best{text-align:center}
+
+/* ---------- footer navigation links ---------- */
+#navlinks{
+  position:fixed;
+  bottom:34px;          /* ~24 px above the footer */
+  left:0;right:0;
+  text-align:center;
+  font-size:1rem;       /* larger than footer (0.8 rem) */
+  font-weight:700;      /* bold */
+  z-index:1;
+}
+#navlinks a{
+  color:#fff;
+  text-decoration:none; /* no underline */
+  margin:0 1.5rem;      /* horizontal spacing */
+}
+#navlinks a:hover{text-shadow:0 0 6px #fff}
 
 /* ===== footer ===== */
 #footer{position:fixed;bottom:10px;left:0;right:0;z-index:1;
@@ -74,7 +89,13 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
     </div>
 </div>
 
-<!-- new footer -->
+<!-- navigation links -->
+<div id="navlinks">
+  <a href="https://genesisoneco.github.io/alpha-mining">Swarm&nbsp;ALPHA</a>
+  <a href="https://genesisoneco.github.io/beta-mining">Swarm&nbsp;BETA</a>
+</div>
+
+<!-- copyright footer -->
 <div id="footer">Genesis&nbsp;One&nbsp;Mining&nbsp;©&nbsp;2025</div>
 
 <script>
@@ -140,7 +161,7 @@ async function refreshStats(){
 }
 refreshStats();setInterval(refreshStats,5000);
 
-/* ===== MATRIX RAIN (green on weekdays, orange on weekends) ===== */
+/* ===== MATRIX RAIN (green weekdays, orange weekends) ===== */
 const canvas=document.getElementById('matrix');
 const ctx=canvas.getContext('2d');
 let w,h,font=14,cols,drops,
@@ -158,8 +179,8 @@ function draw(){
   ctx.fillStyle='rgba(0,0,0,0.05)';
   ctx.fillRect(0,0,w,h);
 
-  const day=new Date().getDay();                     // 0=Sun,6=Sat
-  ctx.fillStyle=(day===0||day===6)?'#ff9f00':'#0f0'; // orange on weekends
+  const day=new Date().getDay();             // 0=Sun,6=Sat
+  ctx.fillStyle=(day===0||day===6)?'#ff9f00':'#0f0';
 
   ctx.font=font+'px monospace';
   drops.forEach((y,i)=>{
