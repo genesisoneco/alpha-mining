@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Genesis One Mining</title>
+<title>CKPool Swarm ALPHA Board</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 /* ===== minimalist dark theme ===== */
@@ -16,7 +16,7 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 /* ===== layout ===== */
 .wrapper{position:relative;z-index:1;
          display:flex;flex-direction:column;justify-content:center;
-         align-items:center;gap:2rem;height:100%}
+         align-items:center;gap:2rem;min-height:100vh}
 
 /* clock + title */
 #datetime{font-size:1.5rem;font-weight:600;text-align:center}
@@ -44,6 +44,10 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 /* align columns */
 .icon,.name,.hash,.best{text-align:center}
 
+/* ===== footer ===== */
+#footer{position:fixed;bottom:10px;left:0;right:0;z-index:1;
+        text-align:center;font-size:.8rem;opacity:.8;text-shadow:0 0 4px #000}
+
 /* responsive */
 @media(max-width:600px){
   .row{font-size:1.3rem}
@@ -70,6 +74,9 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
     </div>
 </div>
 
+<!-- new footer -->
+<div id="footer">Genesis&nbsp;One&nbsp;Mining&nbsp;©&nbsp;2025</div>
+
 <script>
 /* ===== CONFIG ===== */
 const ADDRESS  = 'bc1qjstetm3fsjnc0d9xuwqv3wlucm9slcm9l9gqxa';
@@ -80,8 +87,8 @@ const FETCH_URL= PROXY + encodeURIComponent(CK_URL);
 /* ===== UTILS ===== */
 function toNumber(str='0'){
   let n=parseFloat(str);
-  if(str.includes('P'))n*=1e15; else if(str.includes('T'))n*=1e12;
-  else if(str.includes('G'))n*=1e9; else if(str.includes('M'))n*=1e6;
+  if(str.includes('P'))n*=1e15;else if(str.includes('T'))n*=1e12;
+  else if(str.includes('G'))n*=1e9;else if(str.includes('M'))n*=1e6;
   else if(str.includes('K'))n*=1e3;
   return n;
 }
@@ -95,7 +102,7 @@ function tickClock(){
       hour:'2-digit',minute:'2-digit',second:'2-digit'
     });
 }
-tickClock(); setInterval(tickClock,1000);
+tickClock();setInterval(tickClock,1000);
 
 /* ===== FETCH + RENDER WORKERS ===== */
 async function refreshStats(){
@@ -115,7 +122,7 @@ async function refreshStats(){
       const hashrate=w.hashrate1m;
       const best=w.bestever.toLocaleString();
       const hNum=toNumber(hashrate);
-      const icon=hNum===0?'🔴': hNum<0.5e12?'🟡':'🟢';
+      const icon=hNum===0?'🔴':hNum<0.5e12?'🟡':'🟢';
 
       const row=document.createElement('div');
       row.className='row grid';
@@ -131,7 +138,7 @@ async function refreshStats(){
     document.getElementById('workers').textContent='Failed to load CKPool data.';
   }
 }
-refreshStats(); setInterval(refreshStats,5000);
+refreshStats();setInterval(refreshStats,5000);
 
 /* ===== MATRIX RAIN (green on weekdays, orange on weekends) ===== */
 const canvas=document.getElementById('matrix');
@@ -145,16 +152,14 @@ function resize(){
   cols=Math.floor(w/font);
   drops=Array(cols).fill(1);
 }
-resize(); window.addEventListener('resize',resize);
+resize();window.addEventListener('resize',resize);
 
 function draw(){
   ctx.fillStyle='rgba(0,0,0,0.05)';
   ctx.fillRect(0,0,w,h);
 
-  /* -------- choose color by weekday -------- */
-  const day   = new Date().getDay();           // 0 = Sun, 6 = Sat
-  const color = (day===0 || day===6) ? '#ff9f00' : '#0f0';  // orange on weekends
-  ctx.fillStyle=color;
+  const day=new Date().getDay();                     // 0=Sun,6=Sat
+  ctx.fillStyle=(day===0||day===6)?'#ff9f00':'#0f0'; // orange on weekends
 
   ctx.font=font+'px monospace';
   drops.forEach((y,i)=>{
