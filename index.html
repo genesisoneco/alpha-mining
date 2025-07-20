@@ -13,21 +13,22 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 /* ===== matrix canvas ===== */
 #matrix{position:fixed;inset:0;z-index:0;background:#000;pointer-events:none}
 
-/* ===== WEATHER block (inside wrapper) ===== */
-#weather{display:flex;flex-direction:column;align-items:center;gap:.25rem}
+/* ===== WEATHER ===== */
+#weather{display:flex;flex-direction:column;align-items:center;gap:.25rem;margin-top:1rem}
 #weather .icon{font-size:6rem;line-height:1}
 #weather .temp{font-size:4.5rem;font-weight:900;text-shadow:0 0 6px #000}
 
-/* ===== PAGE layout ===== */
+/* ===== MAIN LAYOUT ===== */
 .wrapper{position:relative;z-index:1;
-         display:flex;flex-direction:column;justify-content:center;
-         align-items:center;gap:2rem;min-height:100vh}
+         display:flex;flex-direction:column;justify-content:flex-start;
+         align-items:center;gap:2rem;min-height:100vh;padding-bottom:80px}/*extra scroll room*/
 
-#datetime{font-size:1.5rem;font-weight:600;text-align:center}
-#title  {font-size:2.3rem;font-weight:800;letter-spacing:1.5px;text-align:center;margin-top:-1rem}
+#datetime{font-size:1.5rem;font-weight:600;text-align:center;margin-top:.25rem}
+#title  {font-size:2.3rem;font-weight:800;letter-spacing:1.5px;text-align:center;margin-top:-.3rem}
 
 #board{display:flex;flex-direction:column;gap:1.2rem;width:90%;max-width:900px}
 .grid{display:grid;grid-template-columns:2.5rem 1fr 1fr 1fr;align-items:center;column-gap:1rem}
+
 .header{font-size:1.1rem;font-weight:600;opacity:.75;text-shadow:0 0 4px #000}
 .header span{text-align:center}
 
@@ -36,20 +37,23 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 .row + .row{margin-top:.6rem}
 .icon,.name,.hash,.best{text-align:center}
 
-/* navigation links */
-#navlinks{position:fixed;bottom:34px;left:0;right:0;text-align:center;
-          font-size:1rem;font-weight:700;z-index:1}
+/* electric-blue highlight */
+.highhash span{color:#00d0ff}
+
+/* ===== NAV & FOOTER ===== */
+#navlinks{position:fixed;bottom:34px;left:0;right:0;text-align:center;font-size:1rem;font-weight:700;z-index:1}
 #navlinks a{color:#fff;text-decoration:none;margin:0 1.5rem}
 #navlinks a:hover{text-shadow:0 0 6px #fff}
 
-/* footer */
-#footer{position:fixed;bottom:10px;left:0;right:0;text-align:center;
-        font-size:.8rem;opacity:.8;text-shadow:0 0 4px #000;z-index:1}
+#footer{position:fixed;bottom:10px;left:0;right:0;text-align:center;font-size:.8rem;opacity:.8;text-shadow:0 0 4px #000;z-index:1}
 
-/* responsive */
+/* ===== MOBILE (under 600 px) ===== */
 @media(max-width:600px){
-  .row{font-size:1.3rem}
-  #title{font-size:1.7rem}
+  #weather .icon{font-size:4rem}
+  #weather .temp{font-size:3rem}
+  #datetime{font-size:1.2rem}
+  #title{font-size:1.6rem}
+  .row{font-size:1.1rem}
 }
 </style>
 </head>
@@ -58,7 +62,7 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 <canvas id="matrix"></canvas>
 
 <div class="wrapper">
-    <!-- WEATHER (big icon + temp) -->
+    <!-- WEATHER -->
     <div id="weather">
       <div class="icon">⏳</div>
       <div class="temp">--°C</div>
@@ -78,13 +82,13 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
     </div>
 </div>
 
-<!-- navigation links -->
+<!-- NAV LINKS -->
 <div id="navlinks">
   <a href="https://genesisoneco.github.io/alpha-mining">Swarm&nbsp;ALPHA</a>
   <a href="https://genesisoneco.github.io/beta-mining">Swarm&nbsp;BETA</a>
 </div>
 
-<!-- copyright footer -->
+<!-- FOOTER -->
 <div id="footer">Genesis&nbsp;One&nbsp;Mining&nbsp;©&nbsp;2025</div>
 
 <script>
@@ -92,107 +96,61 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 const WX_URL='https://api.open-meteo.com/v1/forecast?latitude=37.566&longitude=126.978&current_weather=true&timezone=Asia%2FSeoul';
 const iconEl=document.querySelector('#weather .icon');
 const tempEl=document.querySelector('#weather .temp');
-function wxIcon(code){
-  if(code===0) return '☀️';
-  if([1,2].includes(code)) return '🌤️';
-  if(code===3) return '☁️';
-  if([45,48].includes(code)) return '🌫️';
-  if([51,53,55,56,57].includes(code)) return '🌦️';
-  if([61,63,65,80,81,82,66,67].includes(code)) return '🌧️';
-  if([71,73,75,77,85,86].includes(code)) return '❄️';
-  if([95,96,99].includes(code)) return '⛈️';
-  return '❔';
-}
+const wxIcon=c=>c===0?'☀️':[1,2].includes(c)?'🌤️':c===3?'☁️':[45,48].includes(c)?'🌫️':[51,53,55,56,57].includes(c)?'🌦️':[61,63,65,66,67,80,81,82].includes(c)?'🌧️':[71,73,75,77,85,86].includes(c)?'❄️':[95,96,99].includes(c)?'⛈️':'❔';
 async function fetchWeather(){
-  try{
-    const res=await fetch(WX_URL);
-    const data=await res.json();
-    const {temperature,weathercode}=data.current_weather;
-    iconEl.textContent=wxIcon(weathercode);
-    tempEl.textContent=`${Math.round(temperature)}°C`;
-  }catch(e){
-    console.error('weather error',e);
-    iconEl.textContent='⚠️';
-    tempEl.textContent='--°C';
-  }
+  try{const d=await(await fetch(WX_URL)).json();
+    iconEl.textContent=wxIcon(d.current_weather.weathercode);
+    tempEl.textContent=`${Math.round(d.current_weather.temperature)}°C`;
+  }catch(e){console.error(e);iconEl.textContent='⚠️';tempEl.textContent='--°C';}
 }
-fetchWeather();
-setInterval(fetchWeather,15*60*1000);
+fetchWeather();setInterval(fetchWeather,9e5);
 
 /* ===== CLOCK ===== */
-function tickClock(){
-  const now=new Date();
-  document.getElementById('datetime').textContent=
-    now.toLocaleString(undefined,{
-      weekday:'short',year:'numeric',month:'long',day:'numeric',
-      hour:'2-digit',minute:'2-digit',second:'2-digit'
-    });
-}
-tickClock();setInterval(tickClock,1000);
+const clock=()=>document.getElementById('datetime').textContent=new Date().toLocaleString(undefined,{weekday:'short',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+clock();setInterval(clock,1e3);
 
-/* ===== CONFIG ===== */
+/* ===== POOL CONFIG ===== */
 const ADDRESS='bc1qjstetm3fsjnc0d9xuwqv3wlucm9slcm9l9gqxa';
 const CK_URL=`https://solo.ckpool.org/users/${ADDRESS}`;
 const PROXY='https://corsproxy.io/?';
 const FETCH_URL=PROXY+encodeURIComponent(CK_URL);
 
-/* ===== UTILS ===== */
-function toNumber(str='0'){
-  let n=parseFloat(str);
-  if(str.includes('P'))n*=1e15;else if(str.includes('T'))n*=1e12;
-  else if(str.includes('G'))n*=1e9;else if(str.includes('M'))n*=1e6;
-  else if(str.includes('K'))n*=1e3;
-  return n;
-}
+/* ===== helpers ===== */
+const toNum=s=>['P','T','G','M','K'].reduce((n,u,i)=>s.includes(u)?parseFloat(s)*10**(15-3*i):n,parseFloat(s));
 
 /* ===== FETCH + RENDER WORKERS ===== */
-async function refreshStats(){
+async function render(){
   try{
-    const res=await fetch(FETCH_URL);
-    if(!res.ok)throw new Error(res.statusText);
-    const data=await res.json?await res.json():JSON.parse(await res.text());
-    const workers=data.worker??[];
-    workers.sort((a,b)=>b.bestever-a.bestever);
-    const wrap=document.getElementById('workers');wrap.innerHTML='';
-    workers.forEach(w=>{
-      const id=w.workername.split('.')[1]??w.workername;
-      const hashrate=w.hashrate1m;
-      const best=w.bestever.toLocaleString();
-      const hNum=toNumber(hashrate);
-      const icon=hNum===0?'🔴':hNum<0.5e12?'🟡':'🟢';
-      wrap.insertAdjacentHTML('beforeend',`
-        <div class="row grid">
-          <span class="icon">${icon}</span>
-          <span class="name">${id}</span>
-          <span class="hash">${hashrate}</span>
-          <span class="best">${best}</span>
-        </div>`);
-    });
+    const d=await(await fetch(FETCH_URL)).json();
+    const rows=(d.worker??[]).sort((a,b)=>b.bestever-a.bestever).map(w=>{
+      const id=w.workername.includes('.')?w.workername.split('.')[1]:'sejcore';
+      const rate=w.hashrate1m,best=w.bestever.toLocaleString();
+      const num=toNum(rate),icon=num===0?'🔴':num<0.5e12?'🟡':'🟢';
+      const blue=num>1.5e12?' highhash':'';
+      return `<div class="row grid${blue}">
+        <span class="icon">${icon}</span>
+        <span class="name">${id}</span>
+        <span class="hash">${rate}</span>
+        <span class="best">${best}</span></div>`;
+    }).join('');
+    document.getElementById('workers').innerHTML=rows;
   }catch(e){
     console.error(e);
     document.getElementById('workers').textContent='Failed to load CKPool data.';
   }
 }
-refreshStats();setInterval(refreshStats,5000);
+render();setInterval(render,5e3);
 
 /* ===== MATRIX RAIN ===== */
-const canvas=document.getElementById('matrix');
-const ctx=canvas.getContext('2d');
-let w,h,font=14,cols,drops,chars='アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズヅブプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポ0123456789ABCDEF';
-function resize(){
-  w=canvas.width=window.innerWidth;h=canvas.height=window.innerHeight;
-  cols=Math.floor(w/font);drops=Array(cols).fill(1);}
-resize();window.addEventListener('resize',resize);
-function draw(){
-  ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,w,h);
-  const day=new Date().getDay();ctx.fillStyle=(day===0||day===6)?'#ff9f00':'#0f0';
+const cvs=document.getElementById('matrix'),ctx=cvs.getContext('2d');
+let W,H,font=14,col,drops,chars='アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズヅブプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポ0123456789ABCDEF';
+function resize(){W=cvs.width=innerWidth;H=cvs.height=innerHeight;col=Math.floor(W/font);drops=Array(col).fill(1);}
+resize();addEventListener('resize',resize);
+setInterval(()=>{ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=[6,0].includes(new Date().getDay())?'#ff9f00':'#0f0';
   ctx.font=font+'px monospace';
-  drops.forEach((y,i)=>{
-    ctx.fillText(chars[Math.random()*chars.length|0],i*font,y*font);
-    drops[i]=y*font>h&&Math.random()>0.975?0:y+1;
-  });
-}
-setInterval(draw,33);
+  drops.forEach((y,i)=>{ctx.fillText(chars[Math.random()*chars.length|0],i*font,y*font);drops[i]=y*font>H&&Math.random()>0.975?0:y+1;});
+},33);
 </script>
 </body>
 </html>
