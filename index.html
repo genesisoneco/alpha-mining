@@ -5,15 +5,15 @@
 <title>Genesis One Swarm ALPHA</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-/* ===== base dark theme ===== */
+/* ===== dark theme ===== */
 html,body{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
 *{box-sizing:border-box}
 
 /* ===== matrix canvas ===== */
 #matrix{position:fixed;inset:0;z-index:0;background:#000;pointer-events:none}
 
-/* ===== weather block (unchanged) ===== */
-#weather{display:flex;justify-content:space-between;align-items:flex-start;width:90%;max-width:900px;margin-top:1rem}
+/* ===== twin weather ===== */
+#weather{display:flex;justify-content:space-between;width:90%;max-width:900px;margin-top:1rem}
 .cityWx{display:flex;flex-direction:column;align-items:center;gap:.15rem;flex:1}
 .cityWx .icon{font-size:5rem}
 .cityWx .temp{font-size:3.8rem;font-weight:900;text-shadow:0 0 6px #000}
@@ -26,33 +26,36 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,
 
 #board{display:flex;flex-direction:column;gap:1.2rem;width:90%;max-width:900px}
 .grid{display:grid;grid-template-columns:2.5rem 1fr 1fr 60px 1fr;align-items:center;column-gap:1rem}
-
 .header{font-size:1.1rem;font-weight:600;opacity:.75;text-shadow:0 0 4px #000}
 .header span{text-align:center}
 
 /* ===== rows ===== */
-@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.row{font-size:1.8rem;font-weight:700;letter-spacing:.5px;animation:fadeSlide .5s ease}
+.row{font-size:1.8rem;font-weight:700;letter-spacing:.5px}
 .row span{text-shadow:0 0 5px #000}
 .row + .row{margin-top:.6rem}
-.icon,.name,.hash,.best{text-align:center}
 
-/* electric-blue highlight */
+/* highlight >1.5 T */
 .highhash span{color:#00d0ff}
 
-/* spark-line svg */
-.spark{width:60px;height:20px;stroke:#9df;fill:none;stroke-width:2}
+/* bright-green spark line */
+.spark{width:60px;height:20px;stroke:#00ff66;fill:none;stroke-width:2}
 
-/* nav & footer unchanged */
+/* nav + footer */
 #navlinks{position:fixed;bottom:34px;left:0;right:0;text-align:center;font-size:1rem;font-weight:700;z-index:1}
 #navlinks a{color:#fff;text-decoration:none;margin:0 1.5rem}
 #navlinks a:hover{text-shadow:0 0 6px #fff}
 #footer{position:fixed;bottom:10px;left:0;right:0;text-align:center;font-size:.8rem;opacity:.8;text-shadow:0 0 4px #000;z-index:1}
 
-/* mobile tweaks */
+/* ===== mobile ===== */
 @media(max-width:600px){
-  #weather{gap:.5rem}.cityWx .icon{font-size:3.5rem}.cityWx .temp{font-size:2.5rem}.cityWx .label{font-size:.75rem}
-  #datetime{font-size:1.2rem}#title{font-size:1.6rem}.row{font-size:1.1rem}.spark{width:50px;height:18px}
+  #weather{gap:.5rem}
+  .cityWx .icon{font-size:3.5rem}
+  .cityWx .temp{font-size:2.5rem}
+  .cityWx .label{font-size:.75rem}
+  #datetime{font-size:1.2rem}
+  #title{font-size:1.6rem}
+  .row{font-size:1.1rem}
+  .spark{width:50px;height:18px}
 }
 </style>
 </head>
@@ -71,7 +74,7 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,
 
   <div id="board">
     <div class="header grid">
-      <span></span><span>MEMBER</span><span>HASHRATE</span><span>  </span><span>BEST SHARE</span>
+      <span></span><span>MEMBER</span><span>HASHRATE</span><span></span><span>BEST SHARE</span>
     </div>
     <div id="workers"></div>
   </div>
@@ -81,60 +84,55 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,
 <div id="footer">Genesis One Mining © 2025</div>
 
 <script>
-/* ===== weather: unchanged logic (shortened for brevity) ===== */
-const WX={seoul:{lat:37.566,lon:126.978,el:wxSeoul},busan:{lat:35.1796,lon:129.0756,el:wxBusan}}
+/* ===== weather (Seoul & Busan) ===== */
+const WX={seoul:{lat:37.566,lon:126.978,el:wxSeoul},busan:{lat:35.1796,lon:129.0756,el:wxBusan}};
 const BASE='https://api.open-meteo.com/v1/forecast?current_weather=true&timezone=Asia%2FSeoul';
 const moon=()=>['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'][Math.floor((((Date.now()-Date.parse('2000-01-06T18:14:00Z'))/864e5)%29.53)/3.69)];
 const isNight=()=>{const h=new Date().getHours();return h<6||h>=18};
-const icon=(c,n)=>c===0?(n?moon():'☀️'):[1,2].includes(c)?(n?'🌙☁️':'🌤️'):c===3?'☁️':[45,48].includes(c)?'🌫️':[51,53,55,56,57].includes(c)?(n?'🌧️':'🌦️'):[61,63,65,66,67,80,81,82].includes(c)?'🌧️':[71,73,75,77,85,86].includes(c)?'❄️':[95,96,99].includes(c)?'⛈️':'❔';
-async function wx(){for(const c of Object.values(WX)){try{const d=await(await fetch(`${BASE}&latitude=${c.lat}&longitude=${c.lon}`)).json();const {temperature,weathercode}=d.current_weather;c.el.querySelector('.icon').textContent=icon(weathercode,isNight());c.el.querySelector('.temp').textContent=`${Math.round(temperature)}°C`}catch(e){console.error(e)}}}
-wx();setInterval(wx,9e5);
+function iconBy(c,n){if(c===0)return n?moon():'☀️';if([1,2].includes(c))return n?'🌙☁️':'🌤️';if(c===3)return'☁️';
+if([45,48].includes(c))return'🌫️';if([51,53,55,56,57].includes(c))return n?'🌧️':'🌦️';
+if([61,63,65,66,67,80,81,82].includes(c))return'🌧️';if([71,73,75,77,85,86].includes(c))return'❄️';
+if([95,96,99].includes(c))return'⛈️';return'❔';}
+async function updateWx(){for(const c of Object.values(WX)){try{const d=await(await fetch(`${BASE}&latitude=${c.lat}&longitude=${c.lon}`)).json();
+const {temperature,weathercode}=d.current_weather;c.el.querySelector('.icon').textContent=iconBy(weathercode,isNight());
+c.el.querySelector('.temp').textContent=`${Math.round(temperature)}°C`}catch(e){c.el.querySelector('.icon').textContent='⚠️'}}}
+updateWx();setInterval(updateWx,9e5);
 
 /* ===== clock ===== */
 setInterval(()=>datetime.textContent=new Date().toLocaleString(undefined,{weekday:'short',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}),1e3);
 
-/* ===== pool data with sparkline & fade-slide anim ===== */
-const ADDRESS='bc1qjstetm3fsjnc0d9xuwqv3wlucm9slcm9l9gqxa',URL='https://corsproxy.io/?'+encodeURIComponent(`https://solo.ckpool.org/users/${ADDRESS}`);
+/* ===== pool data with sparkline ===== */
+const ADDRESS='bc1qjstetm3fsjnc0d9xuwqv3wlucm9slcm9l9gqxa';
+const URL='https://corsproxy.io/?'+encodeURIComponent(`https://solo.ckpool.org/users/${ADDRESS}`);
 const toNum=s=>['P','T','G','M','K'].reduce((n,u,i)=>s.includes(u)?parseFloat(s)*10**(15-3*i):n,parseFloat(s));
-const history={}; // {id:[num,…]}
-function makeSpark(arr){
-  const pts=arr.map((v,i)=>`${i/(arr.length-1)*60},${20-(v/Math.max(...arr))*18|0}`).join(' ');
+const history={};
+function spark(arr){
+  const max=Math.max(...arr),pts=arr.map((v,i)=>`${i/(arr.length-1)*60},${20-(v/max||0)*18}`).join(' ');
   return `<svg class="spark" viewBox="0 0 60 20"><polyline points="${pts}"/></svg>`;
 }
 async function render(){
   try{
-    const d=await(await fetch(URL)).json(), wks=d.worker??[];
-    wks.sort((a,b)=>b.bestever-a.bestever);
-    const html=wks.map(w=>{
-      const id=w.workername.includes('.')?w.workername.split('.')[1]:'sejcore';
-      const r=w.hashrate1m, n=toNum(r), best=w.bestever.toLocaleString(), ic=n===0?'🔴':n<.5e12?'🟡':'🟢';
+    const d=await(await fetch(URL)).json(), w=d.worker??[];
+    w.sort((a,b)=>b.bestever-a.bestever);
+    workers.innerHTML=w.map(x=>{
+      const id=x.workername.includes('.')?x.workername.split('.')[1]:'sejcore', r=x.hashrate1m, n=toNum(r), best=x.bestever.toLocaleString();
       history[id]=(history[id]||[]).slice(-29);history[id].push(n);
-      const blue=n>1.5e12?' highhash':'';
-      return `<div class="row grid${blue}">
-        <span class="icon">${ic}</span>
-        <span class="name">${id}</span>
-        <span class="hash">${r}</span>
-        ${makeSpark(history[id])}
-        <span class="best">${best}</span>
-      </div>`;
+      const icon=n===0?'🔴':n<0.5e12?'🟡':'🟢', hi=n>1.5e12?' highhash':'';
+      return `<div class="row grid${hi}"><span class="icon">${icon}</span><span class="name">${id}</span><span class="hash">${r}</span>${spark(history[id])}<span class="best">${best}</span></div>`;
     }).join('');
-    workers.innerHTML=html;
-  }catch(e){console.error(e);workers.textContent='CKPool error';}
+  }catch(e){workers.textContent='CKPool error';console.error(e);}
 }
 render();setInterval(render,5e3);
 
-/* ===== matrix rain with depth blur ===== */
+/* ===== matrix rain (original look, non-reset) ===== */
 const cvs=document.getElementById('matrix'),ctx=cvs.getContext('2d');
-let W=innerWidth,H=innerHeight,f=14,col=Math.floor(W/f),drops=Array(col).fill(1),chars='アァカサタナハマヤャラワガザダバパ…0123456789ABCDEF';
-function resize(force=false){const w=innerWidth,h=innerHeight;if(!force&&Math.abs(h-H)<50&&Math.abs(w-W)<50)return;W=cvs.width=w;H=cvs.height=h;col=Math.floor(W/f);drops=Array(col).fill(1);}
+let W=0,H=0,f=14,col,drops,chars='アァカサタナハマヤャラワガザダバパイィキシチニ…0123456789ABCDEF';
+function resize(force=false){const w=innerWidth,h=innerHeight;if(!force&&Math.abs(h-H)<50&&Math.abs(w-W)<50)return;
+W=cvs.width=w;H=cvs.height=h;col=Math.floor(W/f);drops=Array(col).fill(1);}
 resize(true);addEventListener('resize',()=>resize(false));
-const radial=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)/1.2);radial.addColorStop(0,'rgba(0,0,0,0)');radial.addColorStop(1,'rgba(0,0,0,0.5)');
-setInterval(()=>{
-  ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,W,H);
-  ctx.fillStyle=[0,6].includes(new Date().getDay())?'#ff9f00':'#0f0';
-  ctx.font=f+'px monospace';ctx.shadowBlur=4;ctx.shadowColor=ctx.fillStyle;
+setInterval(()=>{ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=[0,6].includes(new Date().getDay())?'#ff9f00':'#0f0';ctx.font=f+'px monospace';
   drops.forEach((y,i)=>{ctx.fillText(chars[Math.random()*chars.length|0],i*f,y*f);drops[i]=y*f>H&&Math.random()>0.975?0:y+1;});
-  ctx.shadowBlur=0;ctx.fillStyle=radial;ctx.fillRect(0,0,W,H); // vignette
 },33);
 </script>
 </body>
