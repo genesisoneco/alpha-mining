@@ -5,45 +5,34 @@
 <title>Genesis One Swarm ALPHA</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-/* ===== dark theme ===== */
-html,body{margin:0;height:100%;background:#000;color:#fff;
-          font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
+/* ===== base dark theme ===== */
+html,body{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
 *{box-sizing:border-box}
 
 /* ===== matrix canvas ===== */
 #matrix{position:fixed;inset:0;z-index:0;background:#000;pointer-events:none}
 
-/* ===== twin weather panel ===== */
-#weather{
-  display:flex;
-  justify-content:space-between;   /* pushes cities apart */
-  align-items:flex-start;
-  width:90%;max-width:900px;
-  margin-top:1rem
-}
-.cityWx{
-  display:flex;flex-direction:column;align-items:center;gap:.15rem;
-  flex:1;
-}
-.cityWx .icon{font-size:5rem;line-height:1}
+/* ===== weather block (unchanged) ===== */
+#weather{display:flex;justify-content:space-between;align-items:flex-start;width:90%;max-width:900px;margin-top:1rem}
+.cityWx{display:flex;flex-direction:column;align-items:center;gap:.15rem;flex:1}
+.cityWx .icon{font-size:5rem}
 .cityWx .temp{font-size:3.8rem;font-weight:900;text-shadow:0 0 6px #000}
-.cityWx .label{font-size:.9rem;letter-spacing:.5px;font-weight:700;opacity:.9} /* bold */
+.cityWx .label{font-size:.9rem;font-weight:700;opacity:.9}
 
-/* ===== main layout ===== */
-.wrapper{position:relative;z-index:1;
-         display:flex;flex-direction:column;justify-content:flex-start;
-         align-items:center;gap:2rem;min-height:100vh;padding-bottom:80px}
-
-#datetime{font-size:1.5rem;font-weight:600;margin-top:.25rem;text-align:center}
-#title  {font-size:2.3rem;font-weight:800;letter-spacing:1.5px;text-align:center;margin-top:-.3rem}
+/* ===== layout ===== */
+.wrapper{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;gap:2rem;min-height:100vh;padding-bottom:80px}
+#datetime{font-size:1.5rem;font-weight:600;margin-top:.25rem}
+#title{font-size:2.3rem;font-weight:800;letter-spacing:1.5px;margin-top:-.3rem;text-align:center}
 
 #board{display:flex;flex-direction:column;gap:1.2rem;width:90%;max-width:900px}
-.grid{display:grid;grid-template-columns:2.5rem 1fr 1fr 1fr;align-items:center;column-gap:1rem}
+.grid{display:grid;grid-template-columns:2.5rem 1fr 1fr 60px 1fr;align-items:center;column-gap:1rem}
 
 .header{font-size:1.1rem;font-weight:600;opacity:.75;text-shadow:0 0 4px #000}
 .header span{text-align:center}
 
-.row{font-size:1.8rem;font-weight:700;letter-spacing:.5px}
+/* ===== rows ===== */
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.row{font-size:1.8rem;font-weight:700;letter-spacing:.5px;animation:fadeSlide .5s ease}
 .row span{text-shadow:0 0 5px #000}
 .row + .row{margin-top:.6rem}
 .icon,.name,.hash,.best{text-align:center}
@@ -51,136 +40,101 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 /* electric-blue highlight */
 .highhash span{color:#00d0ff}
 
-/* nav & footer */
+/* spark-line svg */
+.spark{width:60px;height:20px;stroke:#9df;fill:none;stroke-width:2}
+
+/* nav & footer unchanged */
 #navlinks{position:fixed;bottom:34px;left:0;right:0;text-align:center;font-size:1rem;font-weight:700;z-index:1}
 #navlinks a{color:#fff;text-decoration:none;margin:0 1.5rem}
 #navlinks a:hover{text-shadow:0 0 6px #fff}
 #footer{position:fixed;bottom:10px;left:0;right:0;text-align:center;font-size:.8rem;opacity:.8;text-shadow:0 0 4px #000;z-index:1}
 
-/* ===== mobile tweaks ===== */
+/* mobile tweaks */
 @media(max-width:600px){
-  #weather{gap:0.5rem}
-  .cityWx .icon{font-size:3.5rem}
-  .cityWx .temp{font-size:2.5rem}
-  .cityWx .label{font-size:.75rem}
-  #datetime{font-size:1.2rem}
-  #title{font-size:1.6rem}
-  .row{font-size:1.1rem}
+  #weather{gap:.5rem}.cityWx .icon{font-size:3.5rem}.cityWx .temp{font-size:2.5rem}.cityWx .label{font-size:.75rem}
+  #datetime{font-size:1.2rem}#title{font-size:1.6rem}.row{font-size:1.1rem}.spark{width:50px;height:18px}
 }
 </style>
 </head>
-
 <body>
 <canvas id="matrix"></canvas>
 
 <div class="wrapper">
   <!-- WEATHER -->
   <div id="weather">
-    <div class="cityWx" id="wxSeoul">
-      <div class="icon">⏳</div>
-      <div class="temp">--°C</div>
-      <div class="label">SEOUL</div>
-    </div>
-    <div class="cityWx" id="wxBusan">
-      <div class="icon">⏳</div>
-      <div class="temp">--°C</div>
-      <div class="label">BUSAN</div>
-    </div>
+    <div class="cityWx" id="wxSeoul"><div class="icon">⏳</div><div class="temp">--°C</div><div class="label">SEOUL</div></div>
+    <div class="cityWx" id="wxBusan"><div class="icon">⏳</div><div class="temp">--°C</div><div class="label">BUSAN</div></div>
   </div>
 
   <div id="datetime">Loading time…</div>
-  <div id="title">Swarm&nbsp;ALPHA’s&nbsp;TOP&nbsp;Ranking</div>
+  <div id="title">Swarm ALPHA’s TOP Ranking</div>
 
   <div id="board">
     <div class="header grid">
-      <span class="icon"></span>
-      <span class="name">MEMBER</span>
-      <span class="hash">HASHRATE</span>
-      <span class="best">BEST&nbsp;SHARE</span>
+      <span></span><span>MEMBER</span><span>HASHRATE</span><span>  </span><span>BEST SHARE</span>
     </div>
     <div id="workers"></div>
   </div>
 </div>
 
-<!-- NAV -->
-<div id="navlinks">
-  <a href="https://genesisoneco.github.io/alpha-mining">Swarm ALPHA</a>
-  <a href="https://genesisoneco.github.io/beta-mining">Swarm BETA</a>
-</div>
-
+<div id="navlinks"><a href="https://genesisoneco.github.io/alpha-mining">Swarm ALPHA</a><a href="https://genesisoneco.github.io/beta-mining">Swarm BETA</a></div>
 <div id="footer">Genesis One Mining © 2025</div>
 
 <script>
-/* ===== WEATHER ===== */
-const WX = {
-  seoul : {lat:37.566, lon:126.978, el:document.getElementById('wxSeoul')},
-  busan : {lat:35.1796,lon:129.0756, el:document.getElementById('wxBusan')}
-};
+/* ===== weather: unchanged logic (shortened for brevity) ===== */
+const WX={seoul:{lat:37.566,lon:126.978,el:wxSeoul},busan:{lat:35.1796,lon:129.0756,el:wxBusan}}
 const BASE='https://api.open-meteo.com/v1/forecast?current_weather=true&timezone=Asia%2FSeoul';
+const moon=()=>['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'][Math.floor((((Date.now()-Date.parse('2000-01-06T18:14:00Z'))/864e5)%29.53)/3.69)];
+const isNight=()=>{const h=new Date().getHours();return h<6||h>=18};
+const icon=(c,n)=>c===0?(n?moon():'☀️'):[1,2].includes(c)?(n?'🌙☁️':'🌤️'):c===3?'☁️':[45,48].includes(c)?'🌫️':[51,53,55,56,57].includes(c)?(n?'🌧️':'🌦️'):[61,63,65,66,67,80,81,82].includes(c)?'🌧️':[71,73,75,77,85,86].includes(c)?'❄️':[95,96,99].includes(c)?'⛈️':'❔';
+async function wx(){for(const c of Object.values(WX)){try{const d=await(await fetch(`${BASE}&latitude=${c.lat}&longitude=${c.lon}`)).json();const {temperature,weathercode}=d.current_weather;c.el.querySelector('.icon').textContent=icon(weathercode,isNight());c.el.querySelector('.temp').textContent=`${Math.round(temperature)}°C`}catch(e){console.error(e)}}}
+wx();setInterval(wx,9e5);
 
-const moonEmoji=()=>['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘']
-  [Math.floor((((Date.now()-Date.parse('2000-01-06T18:14:00Z'))/86400000)%29.530588861)/(29.530588861/8))];
-const isNight=()=>{const h=new Date().getHours();return h<6||h>=18;};
-function iconBy(code,n){
-  if(code===0) return n?moonEmoji():'☀️';
-  if([1,2].includes(code)) return n?'🌙☁️':'🌤️';
-  if(code===3) return '☁️';
-  if([45,48].includes(code)) return '🌫️';
-  if([51,53,55,56,57].includes(code)) return n?'🌧️':'🌦️';
-  if([61,63,65,66,67,80,81,82].includes(code)) return '🌧️';
-  if([71,73,75,77,85,86].includes(code)) return '❄️';
-  if([95,96,99].includes(code)) return '⛈️';
-  return '❔';
+/* ===== clock ===== */
+setInterval(()=>datetime.textContent=new Date().toLocaleString(undefined,{weekday:'short',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}),1e3);
+
+/* ===== pool data with sparkline & fade-slide anim ===== */
+const ADDRESS='bc1qjstetm3fsjnc0d9xuwqv3wlucm9slcm9l9gqxa',URL='https://corsproxy.io/?'+encodeURIComponent(`https://solo.ckpool.org/users/${ADDRESS}`);
+const toNum=s=>['P','T','G','M','K'].reduce((n,u,i)=>s.includes(u)?parseFloat(s)*10**(15-3*i):n,parseFloat(s));
+const history={}; // {id:[num,…]}
+function makeSpark(arr){
+  const pts=arr.map((v,i)=>`${i/(arr.length-1)*60},${20-(v/Math.max(...arr))*18|0}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 60 20"><polyline points="${pts}"/></svg>`;
 }
-async function updateWx(){
-  for(const c of Object.values(WX)){
-    try{
-      const d=await(await fetch(`${BASE}&latitude=${c.lat}&longitude=${c.lon}`)).json();
-      const {temperature,weathercode}=d.current_weather;
-      c.el.querySelector('.icon').textContent=iconBy(weathercode,isNight());
-      c.el.querySelector('.temp').textContent=`${Math.round(temperature)}°C`;
-    }catch(e){console.error(e);c.el.querySelector('.icon').textContent='⚠️';c.el.querySelector('.temp').textContent='--°C';}
-  }
-}
-updateWx();setInterval(updateWx,9e5);
-
-/* ===== CLOCK ===== */
-const tick=()=>document.getElementById('datetime').textContent=
-  new Date().toLocaleString(undefined,{weekday:'short',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
-tick();setInterval(tick,1e3);
-
-/* ===== POOL ===== */
-const ADDRESS='bc1qjstetm3fsjnc0d9xuwqv3wlucm9slcm9l9gqxa';
-const FETCH_URL='https://corsproxy.io/?'+encodeURIComponent(`https://solo.ckpool.org/users/${ADDRESS}`);
-const toNum=s=>['P','T','G','M','K'].reduce((n,u,i)=>
-  s.includes(u)?parseFloat(s)*10**(15-3*i):n,parseFloat(s));
 async function render(){
   try{
-    const d=await(await fetch(FETCH_URL)).json();
-    document.getElementById('workers').innerHTML=
-      (d.worker??[]).sort((a,b)=>b.bestever-a.bestever).map(w=>{
-        const id=w.workername.includes('.')?w.workername.split('.')[1]:'sejcore';
-        const r=w.hashrate1m,b=w.bestever.toLocaleString(),n=toNum(r),i=n===0?'🔴':n<0.5e12?'🟡':'🟢',hi=n>1.5e12?' highhash':'';
-        return `<div class="row grid${hi}"><span class="icon">${i}</span>
-          <span class="name">${id}</span><span class="hash">${r}</span>
-          <span class="best">${b}</span></div>`;
-      }).join('');
-  }catch(e){console.error(e);document.getElementById('workers').textContent='Failed to load data.';}
+    const d=await(await fetch(URL)).json(), wks=d.worker??[];
+    wks.sort((a,b)=>b.bestever-a.bestever);
+    const html=wks.map(w=>{
+      const id=w.workername.includes('.')?w.workername.split('.')[1]:'sejcore';
+      const r=w.hashrate1m, n=toNum(r), best=w.bestever.toLocaleString(), ic=n===0?'🔴':n<.5e12?'🟡':'🟢';
+      history[id]=(history[id]||[]).slice(-29);history[id].push(n);
+      const blue=n>1.5e12?' highhash':'';
+      return `<div class="row grid${blue}">
+        <span class="icon">${ic}</span>
+        <span class="name">${id}</span>
+        <span class="hash">${r}</span>
+        ${makeSpark(history[id])}
+        <span class="best">${best}</span>
+      </div>`;
+    }).join('');
+    workers.innerHTML=html;
+  }catch(e){console.error(e);workers.textContent='CKPool error';}
 }
 render();setInterval(render,5e3);
 
-/* ===== MATRIX RAIN ===== */
+/* ===== matrix rain with depth blur ===== */
 const cvs=document.getElementById('matrix'),ctx=cvs.getContext('2d');
-let W=0,H=0,f=14,col,drops,chars='アァカサ…0123456789ABCDEF';
-function size(force=false){
-  const w=innerWidth,h=innerHeight;if(!force&&Math.abs(h-H)<50&&Math.abs(w-W)<50)return;
-  W=cvs.width=w;H=cvs.height=h;col=Math.floor(W/f);drops=Array(col).fill(1);}
-size(true);addEventListener('resize',()=>size(false));
-setInterval(()=>{ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,W,H);
+let W=innerWidth,H=innerHeight,f=14,col=Math.floor(W/f),drops=Array(col).fill(1),chars='アァカサタナハマヤャラワガザダバパ…0123456789ABCDEF';
+function resize(force=false){const w=innerWidth,h=innerHeight;if(!force&&Math.abs(h-H)<50&&Math.abs(w-W)<50)return;W=cvs.width=w;H=cvs.height=h;col=Math.floor(W/f);drops=Array(col).fill(1);}
+resize(true);addEventListener('resize',()=>resize(false));
+const radial=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)/1.2);radial.addColorStop(0,'rgba(0,0,0,0)');radial.addColorStop(1,'rgba(0,0,0,0.5)');
+setInterval(()=>{
+  ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,W,H);
   ctx.fillStyle=[0,6].includes(new Date().getDay())?'#ff9f00':'#0f0';
-  ctx.font=f+'px monospace';
-  drops.forEach((y,i)=>{ctx.fillText(chars[Math.random()*chars.length|0],i*f,y*f);
-    drops[i]=y*f>H&&Math.random()>0.975?0:y+1;});
+  ctx.font=f+'px monospace';ctx.shadowBlur=4;ctx.shadowColor=ctx.fillStyle;
+  drops.forEach((y,i)=>{ctx.fillText(chars[Math.random()*chars.length|0],i*f,y*f);drops[i]=y*f>H&&Math.random()>0.975?0:y+1;});
+  ctx.shadowBlur=0;ctx.fillStyle=radial;ctx.fillRect(0,0,W,H); // vignette
 },33);
 </script>
 </body>
