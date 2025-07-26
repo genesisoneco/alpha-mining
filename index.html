@@ -5,54 +5,63 @@
 <title>Genesis One Swarm ALPHA</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-/* ===== dark theme ===== */
-html,body{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
+/* ========== GLOBAL DARK THEME ========== */
+html,body{margin:0;height:100%;background:#000;color:#fff;
+          font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
 *{box-sizing:border-box}
 
-/* ===== matrix canvas ===== */
+/* ========== FIXED MATRIX BACKDROP ========== */
 #matrix{position:fixed;inset:0;z-index:0;background:#000;pointer-events:none}
 
-/* ===== weather ===== */
+/* ========== TOP WEATHER STRIP ========== */
 #weather{display:flex;justify-content:space-between;width:90%;max-width:900px;margin-top:.6rem}
 .cityWx{display:flex;flex-direction:column;align-items:center;gap:.1rem;flex:1}
-.cityWx .icon{font-size:4rem}.cityWx .temp{font-size:3rem;font-weight:800;text-shadow:0 0 5px #000}
+.cityWx .icon{font-size:4rem}
+.cityWx .temp{font-size:3rem;font-weight:800;text-shadow:0 0 5px #000}
 .cityWx .label{font-size:.8rem;font-weight:700;opacity:.9}
 
-/* ===== layout ===== */
-.wrapper{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;gap:1.8rem;min-height:100vh;padding-bottom:80px}
+/* ========== PAGE HEADER & LAYOUT ========== */
+.wrapper{position:relative;z-index:1;display:flex;flex-direction:column;
+         align-items:center;gap:1.8rem;min-height:100vh;padding-bottom:80px}
 #datetime{font-size:1.4rem;font-weight:600;margin-top:.1rem;text-align:center}
 #title{font-size:2.1rem;font-weight:800;letter-spacing:1.2px;margin-top:-.2rem;text-align:center}
 
-/* ===== combined chart ===== */
+/* ===== combined hash-rate chart ===== */
 #globalChart{width:90%;max-width:900px;height:160px}
 
-/* ===== worker table ===== */
+/* ========== WORKER TABLE ========== */
 #board{display:flex;flex-direction:column;gap:1.1rem;width:90%;max-width:900px}
+/* desktop grid – icon | name | hashrate | best */
 .grid{display:grid;grid-template-columns:2.5rem 1fr 170px 1fr;align-items:center;column-gap:1rem}
-.header{font-size:1.05rem;font-weight:600;opacity:.75;text-shadow:0 0 4px #000}
-.header span{text-align:center}
+.header{font-size:1.05rem;font-weight:600;opacity:.75;text-shadow:0 0 4px #000;text-align:center}
 
 /* rows */
-.row{font-size:1.7rem;font-weight:700;letter-spacing:.5px}
-.row span{text-shadow:0 0 5px #000}.row + .row{margin-top:.55rem}
+.row{font-size:1.7rem;font-weight:700;letter-spacing:.5px;margin-top:.55rem}
+.row span{text-shadow:0 0 5px #000}
+.icon{display:flex;justify-content:center}
 
-/* centered data cells */
-.hashVal,.best{display:block;text-align:center;width:100%}
+/* numeric cells centred */
+.hashVal,.best{display:flex;justify-content:center;width:100%;text-align:center}
 
-/* highlight */
+/* highlight >1.5 T */
 .highhash span{color:#00d0ff}
 
-/* nav & footer */
-#navlinks{position:fixed;bottom:34px;left:0;right:0;text-align:center;font-size:1rem;font-weight:700;z-index:1}
+/* ========== NAV + FOOTER ========== */
+#navlinks{position:fixed;bottom:34px;left:0;right:0;text-align:center;
+          font-size:1rem;font-weight:700;z-index:1}
 #navlinks a{color:#fff;text-decoration:none;margin:0 1.5rem}
 #navlinks a:hover{text-shadow:0 0 6px #fff}
-#footer{position:fixed;bottom:10px;left:0;right:0;text-align:center;font-size:.8rem;opacity:.8;text-shadow:0 0 4px #000;z-index:1}
+#footer{position:fixed;bottom:10px;left:0;right:0;text-align:center;font-size:.8rem;
+        opacity:.8;text-shadow:0 0 4px #000;z-index:1}
 
-/* ===== mobile tweaks ===== */
+/* ========== MOBILE TWEAKS ========== */
 @media(max-width:600px){
-  #weather{gap:.4rem}.cityWx .icon{font-size:2.8rem}.cityWx .temp{font-size:2.1rem}.cityWx .label{font-size:.7rem}
+  #weather{gap:.4rem}
+  .cityWx .icon{font-size:2.8rem}.cityWx .temp{font-size:2.1rem}.cityWx .label{font-size:.7rem}
   #title{font-size:1.5rem}#datetime{font-size:1.1rem}
-  .row{font-size:1rem}.grid{grid-template-columns:2rem 1fr 140px 1fr}
+  .row{font-size:1rem}
+  /* fixed numeric cols so they stay centred */
+  .grid{grid-template-columns:2rem 1fr 110px 110px}
   #globalChart{height:120px}
 }
 </style>
@@ -62,7 +71,7 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,
 <canvas id="matrix"></canvas>
 
 <div class="wrapper">
-  <!-- WEATHER -->
+  <!-- WEATHER CARDS -->
   <div id="weather">
     <div class="cityWx" id="wxSeoul"><div class="icon">⏳</div><div class="temp">--°C</div><div class="label">SEOUL</div></div>
     <div class="cityWx" id="wxBusan"><div class="icon">⏳</div><div class="temp">--°C</div><div class="label">BUSAN</div></div>
@@ -71,9 +80,10 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,
   <div id="datetime">Loading time…</div>
   <div id="title">Swarm&nbsp;ALPHA’s&nbsp;Ranking</div>
 
-  <!-- Combined chart -->
+  <!-- GLOBAL COMBINED SPARK-LINE -->
   <canvas id="globalChart"></canvas>
 
+  <!-- WORKER BOARD -->
   <div id="board">
     <div class="header grid">
       <span></span><span>MEMBER</span><span>HASHRATE</span><span>BEST&nbsp;SHARE</span>
@@ -82,6 +92,7 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,
   </div>
 </div>
 
+<!-- NAV -->
 <div id="navlinks">
   <a href="https://genesisoneco.github.io/alpha-mining">Swarm&nbsp;ALPHA</a>
   <a href="https://genesisoneco.github.io/beta-mining">Swarm&nbsp;BETA</a>
@@ -90,48 +101,65 @@ html,body{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,
 <div id="footer">Genesis&nbsp;One&nbsp;Mining&nbsp;©&nbsp;2025</div>
 
 <script>
-/* ===== weather (Seoul & Busan) ===== */
+/* ===== WEATHER ===== */
 const WX={seoul:{lat:37.566,lon:126.978,el:wxSeoul},busan:{lat:35.1796,lon:129.0756,el:wxBusan}};
 const BASE='https://api.open-meteo.com/v1/forecast?current_weather=true&timezone=Asia%2FSeoul';
 const moon=()=>['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'][Math.floor((((Date.now()-Date.parse('2000-01-06T18:14:00Z'))/864e5)%29.53)/3.69)];
 const isNight=()=>{const h=new Date().getHours();return h<6||h>=18};
-function iconBy(c,n){if(c===0)return n?moon():'☀️';if([1,2].includes(c))return n?'🌙☁️':'🌤️';if(c===3)return'☁️';
-if([45,48].includes(c))return'🌫️';if([51,53,55,56,57].includes(c))return n?'🌧️':'🌦️';
-if([61,63,65,66,67,80,81,82].includes(c))return'🌧️';if([71,73,75,77,85,86].includes(c))return'❄️';
-if([95,96,99].includes(c))return'⛈️';return'❔';}
-async function updateWx(){for(const c of Object.values(WX)){try{
-  const d=await(await fetch(`${BASE}&latitude=${c.lat}&longitude=${c.lon}`)).json();
-  const {temperature,weathercode}=d.current_weather;
-  c.el.querySelector('.icon').textContent=iconBy(weathercode,isNight());
-  c.el.querySelector('.temp').textContent=`${Math.round(temperature)}°C`;
-}catch(e){console.error(e);}}}
-updateWx();setInterval(updateWx,900000);
+function iconBy(code,n){
+  if(code===0)return n?moon():'☀️';
+  if([1,2].includes(code))return n?'🌙☁️':'🌤️';
+  if(code===3)return'☁️';
+  if([45,48].includes(code))return'🌫️';
+  if([51,53,55,56,57].includes(code))return n?'🌧️':'🌦️';
+  if([61,63,65,66,67,80,81,82].includes(code))return'🌧️';
+  if([71,73,75,77,85,86].includes(code))return'❄️';
+  if([95,96,99].includes(code))return'⛈️';
+  return'❔';
+}
+async function updateWx(){
+  for(const c of Object.values(WX)){
+    try{
+      const d=await(await fetch(`${BASE}&latitude=${c.lat}&longitude=${c.lon}`)).json();
+      const {temperature,weathercode}=d.current_weather;
+      c.el.querySelector('.icon').textContent=iconBy(weathercode,isNight());
+      c.el.querySelector('.temp').textContent=`${Math.round(temperature)}°C`;
+    }catch(e){console.error(e);}
+  }
+}
+updateWx();setInterval(updateWx,900_000);
 
-/* ===== clock ===== */
-setInterval(()=>datetime.textContent=new Date().toLocaleString(undefined,{weekday:'short',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'}),1000);
+/* ===== CLOCK ===== */
+setInterval(()=>datetime.textContent=
+  new Date().toLocaleString(undefined,{weekday:'short',year:'numeric',month:'long',day:'numeric',
+    hour:'2-digit',minute:'2-digit',second:'2-digit'}),1000);
 
-/* ===== pool data & chart ===== */
+/* ===== POOL DATA & GLOBAL CHART ===== */
 const ADDRESS='bc1qjstetm3fsjnc0d9xuwqv3wlucm9slcm9l9gqxa';
 const URL='https://corsproxy.io/?'+encodeURIComponent(`https://solo.ckpool.org/users/${ADDRESS}`);
 const toNum=s=>['P','T','G','M','K'].reduce((n,u,i)=>s.includes(u)?parseFloat(s)*10**(15-3*i):n,parseFloat(s));
 const history={},MAX=30,REFRESH=5000;
-const gCanvas=document.getElementById('globalChart'),gCtx=gCanvas.getContext('2d');
-function resizeChart(){gCanvas.width=gCanvas.clientWidth;gCanvas.height=gCanvas.clientHeight;}resizeChart();addEventListener('resize',resizeChart);
-function color(id){let h=0;for(let i=0;i<id.length;i++)h=id.charCodeAt(i)+((h<<5)-h);return`hsl(${h%360} 70% 60%)`;}
-function drawGlobal(){
-  const w=gCanvas.width,h=gCanvas.height;if(!Object.keys(history).length)return;gCtx.clearRect(0,0,w,h);
-  // axes
-  gCtx.strokeStyle='#fff';gCtx.lineWidth=1;gCtx.beginPath();gCtx.moveTo(40,10);gCtx.lineTo(40,h-28);gCtx.lineTo(w-10,h-28);gCtx.stroke();
-  // labels
-  gCtx.fillStyle='#fff';gCtx.font='14px monospace';gCtx.textAlign='center';gCtx.textBaseline='middle';
-  gCtx.save();gCtx.translate(20,h/2);gCtx.rotate(-Math.PI/2);gCtx.fillText('Hash-rate',0,0);gCtx.restore();
-  gCtx.textBaseline='top';gCtx.fillText('Time',w/2,h-24);
-  // max
+
+const gc=document.getElementById('globalChart'),gctx=gc.getContext('2d');
+function resChart(){gc.width=gc.clientWidth;gc.height=gc.clientHeight;}resChart();addEventListener('resize',resChart);
+function col(id){let h=0;for(let i=0;i<id.length;i++)h=id.charCodeAt(i)+((h<<5)-h);return`hsl(${h%360} 70% 60%)`;}
+function drawChart(){
+  const w=gc.width,h=gc.height;if(!Object.keys(history).length)return;
+  gctx.clearRect(0,0,w,h);
+  /* axes */
+  gctx.strokeStyle='#fff';gctx.lineWidth=1;
+  gctx.beginPath();gctx.moveTo(40,10);gctx.lineTo(40,h-28);gctx.lineTo(w-10,h-28);gctx.stroke();
+  /* labels */
+  gctx.fillStyle='#fff';gctx.font='14px monospace';gctx.textAlign='center';gctx.textBaseline='middle';
+  gctx.save();gctx.translate(20,h/2);gctx.rotate(-Math.PI/2);gctx.fillText('Hash-rate',0,0);gctx.restore();
+  gctx.fillText('Time',w/2,h-24);
+  /* data */
   const max=Math.max(...Object.values(history).flat())||1,xStep=(w-60)/(MAX-1);
   Object.entries(history).forEach(([id,arr])=>{
-    const c=color(id);gCtx.strokeStyle=c;gCtx.lineWidth=1.5;gCtx.beginPath();
-    arr.forEach((v,i)=>gCtx[i?'lineTo':'moveTo'](40+i*xStep,h-28-(v/max)*(h-48)));gCtx.stroke();
-    gCtx.fillStyle=c;gCtx.font='11px monospace';gCtx.fillText(id,40+(arr.length-1)*xStep+5,h-28-(arr[arr.length-1]/max)*(h-48)+3);
+    const c=col(id);gctx.strokeStyle=c;gctx.lineWidth=1.5;gctx.beginPath();
+    arr.forEach((v,i)=>gctx[i?'lineTo':'moveTo'](40+i*xStep,h-28-(v/max)*(h-48)));gctx.stroke();
+    gctx.fillStyle=c;gctx.font='10px monospace';
+    gctx.fillText(id,40+(arr.length-1)*xStep+4,h-28-(arr[arr.length-1]/max)*(h-48)+3);
   });
 }
 async function render(){
@@ -139,9 +167,10 @@ async function render(){
     const d=await(await fetch(URL)).json(), list=d.worker??[];
     list.sort((a,b)=>b.bestever-a.bestever);
     workers.innerHTML=list.map(w=>{
-      const id=w.workername.includes('.')?w.workername.split('.')[1]:'sejcore', r=w.hashrate1m, n=toNum(r), best=w.bestever.toLocaleString();
+      const id=w.workername.includes('.')?w.workername.split('.')[1]:'sejcore';
+      const r=w.hashrate1m,n=toNum(r),best=w.bestever.toLocaleString();
       history[id]=(history[id]||[]).slice(-MAX+1);history[id].push(n);
-      const ic=n===0?'🔴':n<5e11?'🟡':'🟢', hi=n>1.5e12?' highhash':'';
+      const ic=n===0?'🔴':n<5e11?'🟡':'🟢',hi=n>1.5e12?' highhash':'';
       return `<div class="row grid${hi}">
         <span class="icon">${ic}</span>
         <span class="name">${id}</span>
@@ -149,18 +178,26 @@ async function render(){
         <span class="best">${best}</span>
       </div>`;
     }).join('');
-    drawGlobal();
+    drawChart();
   }catch(e){console.error(e);workers.textContent='CKPool error';}
 }
 render();setInterval(render,REFRESH);
 
-/* ===== matrix rain ===== */
+/* ===== MATRIX RAIN ===== */
 const cvs=document.getElementById('matrix'),ctx=cvs.getContext('2d');
-let W=0,H=0,f=14,col,drops,chars='アァカサタナハ…0123456789ABCDEF';
-function re(){const w=innerWidth,h=innerHeight;if(Math.abs(h-H)<50&&Math.abs(w-W)<50)return;W=cvs.width=w;H=cvs.height=h;col=Math.floor(W/f);drops=Array(col).fill(1);}re();addEventListener('resize',re);
-setInterval(()=>{ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,W,H);
-  ctx.fillStyle=[0,6].includes(new Date().getDay())?'#ff9f00':'#0f0';ctx.font=f+'px monospace';
-  drops.forEach((y,i)=>{ctx.fillText(chars[Math.random()*chars.length|0],i*f,y*f);drops[i]=y*f>H&&Math.random()>0.975?0:y+1;});
+let W=0,H=0,f=14,drops,chars='アアカサタナハマヤラワガザダバパ0123456789ABCDEF';
+function resizeRain(force=false){
+  const w=innerWidth,h=innerHeight;if(!force&&Math.abs(w-W)<50&&Math.abs(h-H)<50)return;
+  W=cvs.width=w;H=cvs.height=h;drops=Array(Math.floor(W/f)).fill(1);
+}resizeRain(true);addEventListener('resize',()=>resizeRain());
+setInterval(()=>{
+  ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=[0,6].includes(new Date().getDay())?'#ff9f00':'#0f0';
+  ctx.font=f+'px monospace';
+  drops.forEach((y,i)=>{
+    ctx.fillText(chars[Math.random()*chars.length|0],i*f,y*f);
+    drops[i]=y*f>H&&Math.random()>0.975?0:y+1;
+  });
 },33);
 </script>
 </body>
