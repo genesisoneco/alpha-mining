@@ -6,8 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 /* ===== GLOBAL DARK THEME ===== */
-html,body{margin:0;height:100%;background:#000;color:#fff;
-          font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
+html,body{margin:0;height:100%;background:#000;color:#fff;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
 *{box-sizing:border-box}
 
 /* ===== MATRIX BACKDROP ===== */
@@ -15,18 +14,17 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 
 /* ===== MAIN STACK ===== */
 .wrapper{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;
-         gap:1.6rem;min-height:100vh;padding:1rem 0 80px} /* top padding added */
+         gap:1rem;min-height:100vh;padding:1rem 0 80px}   /* gap reduced */
 
 #title   {font-size:2.1rem;font-weight:800;letter-spacing:1.2px;margin:0}
-#datetime{font-size:1.4rem;font-weight:600;margin:0;text-align:center} /* tight gap */
+#datetime{font-size:1.4rem;font-weight:600;margin:0;text-align:center}
 
-#weather{display:flex;justify-content:space-between;width:90%;max-width:900px;margin-top:.4rem}
+#weather{display:flex;justify-content:space-between;width:90%;max-width:900px;margin-top:.25rem} /* tighter */
 .cityWx{display:flex;flex-direction:column;align-items:center;gap:.1rem;flex:1}
 .cityWx .icon{font-size:4rem}
 .cityWx .temp{font-size:3rem;font-weight:800;text-shadow:0 0 5px #000}
 .cityWx .label{font-size:.8rem;font-weight:700;opacity:.9}
 
-/* ===== GLOBAL CHART ===== */
 #globalChart{width:90%;max-width:900px;height:160px;margin-top:.8rem}
 
 /* ===== WORKER BOARD ===== */
@@ -39,13 +37,11 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 .hashVal,.best{display:flex;justify-content:center;width:100%;text-align:center}
 .highhash span{color:#00d0ff}
 
-/* ===== RAINBOW EFFECT (> 2 T) ===== */
+/* rainbow animation for >2 T */
 @keyframes rainbowShift{0%{background-position:0%}100%{background-position:100%}}
 .rainbow{
   background:linear-gradient(90deg,red,orange,yellow,green,cyan,blue,purple,red);
-  background-size:400%;
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
+  background-size:400%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
   animation:rainbowShift 4s linear infinite;
 }
 
@@ -62,7 +58,7 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
   #weather{gap:.35rem}
   .cityWx .icon{font-size:2.8rem}.cityWx .temp{font-size:2.1rem}.cityWx .label{font-size:.7rem}
   .row{font-size:1rem}
-  .grid{grid-template-columns:2rem 1fr 110px 110px} /* fixed numeric col widths */
+  .grid{grid-template-columns:2rem 1fr 110px 110px}
   #globalChart{height:120px}
 }
 </style>
@@ -72,16 +68,13 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 <canvas id="matrix"></canvas>
 
 <div class="wrapper">
-  <!-- TITLE & CLOCK -->
-  <div id="title">Swarm ALPHA’s Ranking</div>
+  <div id="title">Swarm&nbsp;ALPHA’s&nbsp;Ranking</div>
   <div id="datetime">Loading time…</div>
 
   <!-- WEATHER -->
   <div id="weather">
-    <div class="cityWx" id="wxSeoul">
-      <div class="icon">⏳</div><div class="temp">--°C</div><div class="label">SEOUL</div></div>
-    <div class="cityWx" id="wxBusan">
-      <div class="icon">⏳</div><div class="temp">--°C</div><div class="label">BUSAN</div></div>
+    <div class="cityWx" id="wxSeoul"><div class="icon">⏳</div><div class="temp">--°C</div><div class="label">SEOUL</div></div>
+    <div class="cityWx" id="wxBusan"><div class="icon">⏳</div><div class="temp">--°C</div><div class="label">BUSAN</div></div>
   </div>
 
   <!-- COMBINED HASH-RATE CHART -->
@@ -96,8 +89,8 @@ html,body{margin:0;height:100%;background:#000;color:#fff;
 
 <!-- NAV & COPYRIGHT -->
 <div id="navlinks">
-  <a href="https://genesisoneco.github.io/alpha-mining">Swarm ALPHA</a>
-  <a href="https://genesisoneco.github.io/beta-mining">Swarm BETA</a>
+  <a href="https://genesisoneco.github.io/alpha-mining">Swarm&nbsp;ALPHA</a>
+  <a href="https://genesisoneco.github.io/beta-mining">Swarm&nbsp;BETA</a>
 </div>
 <div id="footer">Genesis One Mining © 2025</div>
 
@@ -128,81 +121,70 @@ async function refreshWeather(){
     }catch(e){console.error('weather',e);}
   }
 }
-refreshWeather();setInterval(refreshWeather,900_000);
+refreshWeather();setInterval(refreshWeather,900000);
 
 /* ===== CLOCK ===== */
 setInterval(()=>datetime.textContent=
-  new Date().toLocaleString(undefined,
-    {weekday:'short',year:'numeric',month:'long',day:'numeric',
-     hour:'2-digit',minute:'2-digit',second:'2-digit'}),1000);
+  new Date().toLocaleString(undefined,{weekday:'short',year:'numeric',month:'long',day:'numeric',
+    hour:'2-digit',minute:'2-digit',second:'2-digit'}),1000);
 
-/* ===== POOL & CHART ===== */
+/* ===== POOL DATA + CHART ===== */
 const ADDRESS='bc1qjstetm3fsjnc0d9xuwqv3wlucm9slcm9l9gqxa';
 const POOL_URL='https://corsproxy.io/?'+encodeURIComponent(`https://solo.ckpool.org/users/${ADDRESS}`);
-const toNum=s=>['P','T','G','M','K'].reduce((n,u,i)=>s.includes(u)?
-                   parseFloat(s)*1e3**(5-i):n,parseFloat(s));
-const hist={},MAX=30,INTERVAL=5000;
+const toNum=s=>['P','T','G','M','K'].reduce((acc,u,i)=>s.includes(u)?parseFloat(s)*1e3**(5-i):acc,parseFloat(s));
+const hist={},MAX=30,REFRESH=5000;
 
-/* combined chart canvas */
+/* combined chart */
 const gc=document.getElementById('globalChart'),gctx=gc.getContext('2d');
-function sizeChart(){gc.width=gc.clientWidth;gc.height=gc.clientHeight;}sizeChart();
-addEventListener('resize',sizeChart);
-const hashColor=id=>`hsl(${[...id].reduce((h,ch)=>ch.charCodeAt(0)+((h<<5)-h),0)%360} 70% 60%)`;
+function resizeChart(){gc.width=gc.clientWidth;gc.height=gc.clientHeight;}resizeChart();addEventListener('resize',resizeChart);
+const hCol=id=>`hsl(${[...id].reduce((h,ch)=>ch.charCodeAt(0)+((h<<5)-h),0)%360} 70% 60%)`;
 function drawChart(){
   const w=gc.width,h=gc.height;if(!Object.keys(hist).length)return;gctx.clearRect(0,0,w,h);
   gctx.strokeStyle='#fff';gctx.lineWidth=1;gctx.beginPath();gctx.moveTo(40,10);gctx.lineTo(40,h-28);gctx.lineTo(w-10,h-28);gctx.stroke();
   gctx.fillStyle='#fff';gctx.font='14px monospace';gctx.textAlign='center';gctx.textBaseline='middle';
   gctx.save();gctx.translate(20,h/2);gctx.rotate(-Math.PI/2);gctx.fillText('Hash-rate',0,0);gctx.restore();
-  gctx.fillText('Time',w/2,h-24);
+  gctx.fillText('Time',w/2,h-22);                        /* moved down */
   const max=Math.max(...Object.values(hist).flat())||1,xStep=(w-60)/(MAX-1);
   Object.entries(hist).forEach(([id,arr])=>{
-    const c=hashColor(id);gctx.strokeStyle=c;gctx.lineWidth=1.4;gctx.beginPath();
+    const col=hCol(id);gctx.strokeStyle=col;gctx.lineWidth=1.4;gctx.beginPath();
     arr.forEach((v,i)=>gctx[i?'lineTo':'moveTo'](40+i*xStep,h-28-(v/max)*(h-48)));gctx.stroke();
-    gctx.fillStyle=c;gctx.font='10px monospace';
-    gctx.fillText(id,40+(arr.length-1)*xStep+4,h-28-(arr[arr.length-1]/max)*(h-48)+3);});
+    gctx.fillStyle=col;gctx.font='10px monospace';
+    gctx.fillText(id,40+(arr.length-1)*xStep+4,h-28-(arr[arr.length-1]/max)*(h-48)+3);
+  });
 }
-
 async function refreshStats(){
   try{
-    const data=await(await fetch(POOL_URL)).json();
-    const workers=data.worker??[];
+    const data=await(await fetch(POOL_URL)).json(),workers=data.worker??[];
     workers.sort((a,b)=>b.bestever-a.bestever);
-    workersDiv.innerHTML='';
+    const wrap=document.getElementById('workers');wrap.innerHTML='';
     workers.forEach(w=>{
       const id=w.workername.includes('.')?w.workername.split('.')[1]:'sejcore';
-      const hashrate=w.hashrate1m;
-      const n=toNum(hashrate);
-      const best=w.bestever.toLocaleString();
+      const rate=w.hashrate1m, n=toNum(rate), best=w.bestever.toLocaleString();
       hist[id]=(hist[id]||[]).slice(-MAX+1);hist[id].push(n);
       const row=document.createElement('div');
       row.className='row grid'+(n>2e12?' rainbow':n>1.5e12?' highhash':'');
       row.innerHTML=`
         <span class="icon">${n===0?'🔴':n<5e11?'🟡':'🟢'}</span>
         <span class="name">${id}</span>
-        <span class="hashVal">${hashrate}</span>
+        <span class="hashVal">${rate}</span>
         <span class="best">${best}</span>`;
-      workersDiv.appendChild(row);
+      wrap.appendChild(row);
     });
     drawChart();
-  }catch(e){console.error('ckpool',e);workersDiv.textContent='CKPool error';}
+  }catch(e){console.error('ckpool',e);document.getElementById('workers').textContent='CKPool error';}
 }
-const workersDiv=document.getElementById('workers');
-refreshStats();setInterval(refreshStats,INTERVAL);
+refreshStats();setInterval(refreshStats,REFRESH);
 
 /* ===== MATRIX RAIN ===== */
 const cvs=document.getElementById('matrix'),ctx=cvs.getContext('2d');
 let W=0,H=0,f=14,drops,chars='アカサタナハマヤラ0123456789ABCDEF';
-function resizeRain(force=false){
-  const w=innerWidth,h=innerHeight;if(!force&&Math.abs(w-W)<50&&Math.abs(h-H)<50)return;
-  W=cvs.width=w;H=cvs.height=h;drops=Array(Math.floor(W/f)).fill(1);
-}resizeRain(true);addEventListener('resize',()=>resizeRain());
+function rainSize(force=false){const w=innerWidth,h=innerHeight;if(!force&&Math.abs(w-W)<50&&Math.abs(h-H)<50)return;
+  W=cvs.width=w;H=cvs.height=h;drops=Array(Math.floor(W/f)).fill(1);}rainSize(true);addEventListener('resize',()=>rainSize());
 setInterval(()=>{
   ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fillRect(0,0,W,H);
   ctx.fillStyle=[0,6].includes(new Date().getDay())?'#ff9f00':'#0f0';ctx.font=f+'px monospace';
-  drops.forEach((y,i)=>{
-    ctx.fillText(chars[Math.random()*chars.length|0],i*f,y*f);
-    drops[i]=y*f>H&&Math.random()>0.975?0:y+1;
-  });
+  drops.forEach((y,i)=>{ctx.fillText(chars[Math.random()*chars.length|0],i*f,y*f);
+    drops[i]=y*f>H&&Math.random()>0.975?0:y+1;});
 },33);
 </script>
 </body>
